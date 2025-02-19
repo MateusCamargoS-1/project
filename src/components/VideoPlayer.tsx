@@ -56,7 +56,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     vjsPlayer.on("loadedmetadata", () => {
       const savedProgress = localStorage.getItem(`movie-${movieId}-progress`);
       if (savedProgress) {
-        vjsPlayer.currentTime(parseFloat(savedProgress)); 
+        vjsPlayer.currentTime(parseFloat(savedProgress));
       }
     });
 
@@ -94,6 +94,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       player.play();
       setPlaying(true);
       setShowCoverImage(false);
+      setLoading(false);
     } else {
       player.pause();
       setPlaying(false);
@@ -158,7 +159,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       )}
 
       <div className="absolute inset-0 flex justify-center items-center p-4 z-20">
-        <div className="absolute flex flex-col justify-center items-center gap-6 bg-black/60 p-6 rounded-full">
+        <div className="absolute flex items-center justify-center gap-6 bg-black/60 p-4 rounded-full w-4/5">
           <button
             onClick={togglePlay}
             className="text-white hover:text-gray-300 transition"
