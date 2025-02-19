@@ -1,43 +1,38 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Play, Plus, ThumbsUp, Share2 } from 'lucide-react';
-import { api } from '../lib/axios';
-import  Button  from '../components/ui/button';
-
-interface Movie {
-  id: string;
-  title: string;
-  overview: string;
-  backdrop_path: string;
-  poster_path: string;
-  vote_average: number;
-  release_date: string;
-  genres: string[];
-  runtime: number;
-  trailer_url?: string;
-}
+import { Play, Plus, ThumbsUp, Share2, ArrowLeft } from 'lucide-react';
+import Button from '../components/ui/button';
+import listMovies from '../services/listMovies.service';
+import { VideoPlayer } from '../components/VideoPlayer';
+import { Navbar } from '../components/navbar';
 
 export function MoviePage() {
   const { id } = useParams<{ id: string }>();
-  const [movie, setMovie] = useState<Movie | null>(null);
+  const [movie, setMovie] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [showTrailer, setShowTrailer] = useState(false);
 
   useEffect(() => {
-    async function loadMovie() {
+    const fetchMovie = async () => {
       try {
-        const response = await api.get(`/movies/${id}`);
-        setMovie(response.data);
-      } catch (err) {
-        setError('Failed to load movie details');
+        const movies = await listMovies();
+        const foundMovie = movies.find(m => m.id === Number(id));
+        setMovie(foundMovie);
+        if (!foundMovie) {
+          return setError('Não foi possível carregar o filme');
+        }
+      } catch (error) {
+        setError('Falha ao carregar detalhes do filme');
       } finally {
         setIsLoading(false);
       }
-    }
+    };
 
-    loadMovie();
+    if (id) {
+      fetchMovie();
+    }
   }, [id]);
 
   if (isLoading) {
@@ -58,14 +53,23 @@ export function MoviePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="relative h-[70vh]">
-        {showTrailer && movie.trailer_url ? (
+      {/* A Navbar será renderizada apenas se showTrailer for falso */}
+      {!showTrailer && <Navbar />}
+      <div className="relative h-[100vh]">
+        {showTrailer && movie.backdropPath ? (
           <div className="absolute inset-0 bg-black">
-            <iframe
-              src={movie.trailer_url}
-              className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+            <div className="fixed top-0 left-0 z-50 p-4">
+              <Link
+                to="/"
+                className="flex items-center gap-2 text-white hover:text-gray-300 transition"
+              >
+                <ArrowLeft size={24} />
+                <span>Back to Browse</span>
+              </Link>
+            </div>
+            <VideoPlayer
+              movieId={movie.id}
+              streamUrl={`https://mflix.moleniuk.com/api/stream/${movie.id}`}
             />
             <button
               onClick={() => setShowTrailer(false)}
@@ -78,14 +82,14 @@ export function MoviePage() {
           <>
             <div className="absolute inset-0">
               <img
-                src={`https://image.tmdb.org/t/p/original${movie.backdrop_path}`}
+                src={`https://image.tmdb.org/t/p/original${movie.backdropPath}`}
                 alt={movie.title}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 netflix-gradient" />
             </div>
-            
-            <motion.div 
+
+            <motion.div
               className="absolute bottom-0 left-0 p-8 max-w-3xl"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -93,20 +97,20 @@ export function MoviePage() {
               <h1 className="text-5xl font-bold mb-4">{movie.title}</h1>
               <div className="flex items-center space-x-4 mb-4">
                 <span className="text-green-500 font-medium">
-                  {Math.round(movie.vote_average * 10)}% Match
+                  {Math.round(movie.voteAverage * 10)}% Match
                 </span>
-                <span>{new Date(movie.release_date).getFullYear()}</span>
+                <span>{new Date(movie.releaseDate).getFullYear()}</span>
                 <span>{movie.runtime} min</span>
               </div>
-              
+
               <div className="flex items-center space-x-4 mb-6">
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   className="flex items-center space-x-2"
                   onClick={() => setShowTrailer(true)}
                 >
                   <Play className="w-5 h-5" />
-                  <span>Play Trailer</span>
+                  <span>Play</span>
                 </Button>
                 <Button variant="secondary" size="lg" className="flex items-center space-x-2">
                   <Plus className="w-5 h-5" />
@@ -121,16 +125,16 @@ export function MoviePage() {
               </div>
 
               <p className="text-lg text-gray-200 mb-4">{movie.overview}</p>
-              
+
               <div className="flex items-center space-x-2">
                 <span className="text-gray-400">Genres:</span>
                 <div className="flex items-center space-x-2">
-                  {movie.genres.map((genre) => (
+                  {movie.genres.map((genre: any) => (
                     <span
-                      key={genre}
+                      key={genre.idGenres}
                       className="px-3 py-1 bg-white/10 rounded-full text-sm"
                     >
-                      {genre}
+                      {genre.name}
                     </span>
                   ))}
                 </div>

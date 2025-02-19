@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search as SearchIcon, X } from 'lucide-react';
 import { api } from '../lib/axios';
 import { MovieCard } from '../components/movie-card';
+import { Navbar } from '../components/navbar';
 
 interface Movie {
   id: string;
@@ -24,7 +25,7 @@ export function SearchPage() {
   useEffect(() => {
     if (query.length >= 2) {
       clearTimeout(searchTimeout.current);
-      
+
       searchTimeout.current = window.setTimeout(async () => {
         setIsLoading(true);
         try {
@@ -32,17 +33,16 @@ export function SearchPage() {
             api.get(`/movies/search?q=${query}`),
             api.get(`/movies/suggestions?q=${query}`),
           ]);
-          
+
           setResults(searchResults.data);
           setSuggestions(suggestionsResults.data);
         } catch (error) {
-          console.error('Search failed:', error);
+          console.error('Pesquisa falhou:', error);
         } finally {
           setIsLoading(false);
         }
       }, 300);
 
-      // Update URL with search query
       navigate(`/search?q=${query}`, { replace: true });
     } else {
       setResults([]);
@@ -54,6 +54,7 @@ export function SearchPage() {
 
   return (
     <div className="min-h-screen pt-24 px-8">
+      <Navbar />
       <div className="max-w-4xl mx-auto">
         <div className="relative mb-8">
           <div className="relative">
@@ -110,7 +111,7 @@ export function SearchPage() {
         ) : query.length >= 2 ? (
           <div className="text-center py-12">
             <p className="text-lg text-gray-400">
-              No results found for "{query}"
+              Nenhum resultado encontrado para "{query}"
             </p>
           </div>
         ) : null}

@@ -22,7 +22,7 @@ export function RegisterPage() {
       await register(name, email, password);
       navigate('/');
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      setError('Falha ao registrar. Por favor tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -40,7 +40,7 @@ export function RegisterPage() {
         animate={{ opacity: 1, y: 0 }}
         className="relative w-full max-w-md p-8 bg-black/75 rounded-lg"
       >
-        <h1 className="text-3xl font-bold mb-8">Sign Up</h1>
+        <h1 className="text-3xl font-bold mb-8">Cadastrar</h1>
         
         {error && (
           <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded text-sm">
@@ -87,13 +87,13 @@ export function RegisterPage() {
             className="w-full py-6 text-lg font-semibold"
             disabled={isLoading}
           >
-            {isLoading ? 'Creating account...' : 'Sign Up'}
+            {isLoading ? 'Criando conta...' : 'Criar conta'}
           </Button>
 
           <p className="text-gray-400 text-center">
-            Already have an account?{' '}
+            Ja tem uma conta?{' '}
             <Link to="/login" className="text-white hover:underline">
-              Sign in
+              Entrar
             </Link>
           </p>
         </form>

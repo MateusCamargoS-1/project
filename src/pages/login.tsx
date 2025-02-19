@@ -7,7 +7,7 @@ import  Button  from '../components/ui/button';
 export function LoginPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [usuario, setUsuario] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -18,10 +18,10 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      await login(usuario, password);
       navigate('/');
     } catch (err) {
-      setError('Invalid email or password');
+      setError('Email ou Senha Inválido!');
     } finally {
       setIsLoading(false);
     }
@@ -39,7 +39,7 @@ export function LoginPage() {
         animate={{ opacity: 1, y: 0 }}
         className="relative w-full max-w-md p-8 bg-black/75 rounded-lg"
       >
-        <h1 className="text-3xl font-bold mb-8">Sign In</h1>
+        <h1 className="text-3xl font-bold mb-8">Login</h1>
         
         {error && (
           <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded text-sm">
@@ -50,10 +50,10 @@ export function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="Usuario"
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
               className="w-full p-4 rounded bg-zinc-800 border border-zinc-700 focus:border-netflix-red focus:ring-1 focus:ring-netflix-red"
               required
             />
@@ -75,13 +75,13 @@ export function LoginPage() {
             className="w-full py-6 text-lg font-semibold"
             disabled={isLoading}
           >
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? 'Entrando...' : 'Entrar'}
           </Button>
 
           <p className="text-gray-400 text-center">
-            New to Netflix?{' '}
+            Novo na Netflix?{' '}
             <Link to="/register" className="text-white hover:underline">
-              Sign up now
+              Criar agora
             </Link>
           </p>
         </form>

@@ -2,23 +2,23 @@ import { Play, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import  Button  from './ui/button';
 
-interface Movie {
-  id: string;
-  title: string;
-  overview: string;
-  backdrop_path: string;
-}
+// interface Movie {
+//   id: string;
+//   title: string;
+//   overview: string;
+//   backdrop_path: string;
+// }
 
-interface HeroBannerProps {
-  movie: Movie;
-}
+// interface HeroBannerProps {
+//   movie: Movie;
+// }
 
-export function HeroBanner({ movie }: HeroBannerProps) {
+export function HeroBanner({ movie }: any) {
   return (
     <div className="relative h-[85vh] w-full">
       <div className="absolute inset-0">
         <img
-          src={`https://image.tmdb.org/t/p/original${movie.backdrop_path}`}
+          src={movie.backdropPath}
           alt={movie.title}
           className="w-full h-full object-cover"
         />

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '../lib/axios';
+import axios from 'axios';
 
 interface User {
   id: string;
@@ -11,7 +12,7 @@ interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (login: string, password: string) => Promise<void>;
   logout: () => void;
   register: (name: string, email: string, password: string) => Promise<void>;
 }
@@ -19,9 +20,9 @@ interface AuthState {
 export const useAuth = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
-  login: async (email, password) => {
+  login: async (login, password) => {
     try {
-      const response = await api.post('/auth/login', { email, password });
+      const response = await axios.post('https://mflix.moleniuk.com/api/auth/login', { login, password });
       const { token, user } = response.data;
       
       localStorage.setItem('netflix_token', token);

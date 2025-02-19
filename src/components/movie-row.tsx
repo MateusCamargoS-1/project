@@ -2,19 +2,19 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { MovieCard } from './movie-card';
 
-interface Movie {
-  id: string;
-  title: string;
-  poster_path: string;
-  vote_average: number;
-}
+// interface Movie {
+//   id: string;
+//   title: string;
+//   poster_path: string;
+//   vote_average: number;
+// }
 
-interface MovieRowProps {
-  title: string;
-  movies: Movie[];
-}
+// interface MovieRowProps {
+//   title: string;
+//   movies: Movie[];
+// }
 
-export function MovieRow({ title, movies }: MovieRowProps) {
+export function MovieRow({ title, movies }: any) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [isMoved, setIsMoved] = useState(false);
 
@@ -36,7 +36,7 @@ export function MovieRow({ title, movies }: MovieRowProps) {
       <h2 className="text-xl font-semibold px-4 md:px-8">{title}</h2>
       <div className="group relative">
         <ChevronLeft
-          className={`absolute top-0 bottom-0 left-2 z-40 m-auto h-9 w-9 cursor-pointer opacity-0 transition hover:scale-125 group-hover:opacity-100 ${
+          className={`absolute top-0 bottom-0 left-2 z-40 m-auto h-9 w-9 cursor-pointer opacity-0 transition group-hover:opacity-100 ${
             !isMoved && 'hidden'
           }`}
           onClick={() => handleClick('left')}
@@ -46,7 +46,7 @@ export function MovieRow({ title, movies }: MovieRowProps) {
           ref={rowRef}
           className="flex items-center space-x-2 overflow-x-scroll scrollbar-hide px-4 md:px-8"
         >
-          {movies.map((movie, index) => (
+          {movies.map((movie: any, index: any) => (
             <div key={movie.id} className="min-w-[180px]">
               <MovieCard movie={movie} index={index} />
             </div>
@@ -54,7 +54,7 @@ export function MovieRow({ title, movies }: MovieRowProps) {
         </div>
 
         <ChevronRight
-          className="absolute top-0 bottom-0 right-2 z-40 m-auto h-9 w-9 cursor-pointer opacity-0 transition hover:scale-125 group-hover:opacity-100"
+          className="absolute top-0 bottom-0 right-2 z-40 m-auto h-9 w-9 cursor-pointer opacity-0 transition group-hover:opacity-100"
           onClick={() => handleClick('right')}
         />
       </div>

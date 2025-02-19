@@ -2,19 +2,19 @@ import { motion } from 'framer-motion';
 import { Play, Plus, ThumbsUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-interface Movie {
-  id: string;
-  title: string;
-  poster_path: string;
-  vote_average: number;
-}
+// interface Movie {
+//   id: string;
+//   title: string;
+//   poster_path: string;
+//   vote_average: number;
+// }
 
-interface MovieCardProps {
-  movie: Movie;
-  index: number;
-}
+// interface MovieCardProps {
+//   movie: Movie;
+//   index: number;
+// }
 
-export function MovieCard({ movie, index }: MovieCardProps) {
+export function MovieCard({ movie, index }: any) {
   return (
     <motion.div
       className="relative group"
@@ -25,7 +25,7 @@ export function MovieCard({ movie, index }: MovieCardProps) {
       <Link to={`/movie/${movie.id}`}>
         <div className="relative aspect-[2/3] rounded-md overflow-hidden">
           <img
-            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+            src={movie.posterPath}
             alt={movie.title}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />

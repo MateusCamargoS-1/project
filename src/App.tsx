@@ -6,20 +6,19 @@ import { RegisterPage } from './pages/register';
 // import { ProfilePage } from './pages/profile';
 import { MoviePage } from './pages/movie';
 import { SearchPage } from './pages/search';
-import { ProtectedRoute } from './components/protected-route';
+// import { ProtectedRoute } from './components/protected-route';
 
 function App() {
   return (
     <Router>
       <div className="min-h-screen bg-background">
-        <Navbar />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+          <Route path="/" element={<HomePage />} />
           {/* <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} /> */}
-          <Route path="/movie/:id" element={<ProtectedRoute><MoviePage /></ProtectedRoute>} />
-          <Route path="/search" element={<ProtectedRoute><SearchPage /></ProtectedRoute>} />
+          <Route path="/movie/:id" element={<MoviePage />} />
+          <Route path="/search" element={<SearchPage />} />
         </Routes>
       </div>
     </Router>

@@ -1,46 +1,31 @@
 import { useEffect, useState } from 'react';
-import { api } from '../lib/axios';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, EffectFade } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/effect-fade';
 import { HeroBanner } from '../components/hero-banner';
 import { MovieRow } from '../components/movie-row';
-
-interface Movie {
-  id: string;
-  title: string;
-  overview: string;
-  backdrop_path: string;
-  poster_path: string;
-  vote_average: number;
-}
+import listMovies from '../services/listMovies.service';
+import { Movie } from '../types/@types';
+import { Navbar } from '../components/navbar';
 
 export function HomePage() {
-  const [featuredMovie, setFeaturedMovie] = useState<Movie | null>(null);
-  const [trendingMovies, setTrendingMovies] = useState<Movie[]>([]);
-  const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
-  const [topRatedMovies, setTopRatedMovies] = useState<Movie[]>([]);
+  const [movies, setMovies] = useState<Movie[]>([]);
 
   useEffect(() => {
-    async function loadMovies() {
+    const fetchMovies = async () => {
       try {
-        const [featured, trending, popular, topRated] = await Promise.all([
-          api.get('/movies/featured'),
-          api.get('/movies/trending'),
-          api.get('/movies/popular'),
-          api.get('/movies/top-rated'),
-        ]);
-
-        setFeaturedMovie(featured.data);
-        setTrendingMovies(trending.data);
-        setPopularMovies(popular.data);
-        setTopRatedMovies(topRated.data);
+        const data = await listMovies();
+        setMovies(data);
       } catch (error) {
-        console.error('Failed to load movies:', error);
+        console.error('Error fetching movies:', error);
       }
-    }
+    };
 
-    loadMovies();
+    fetchMovies();
   }, []);
 
-  if (!featuredMovie) {
+  if (!movies.length) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full animate-spin" />
@@ -50,12 +35,25 @@ export function HomePage() {
 
   return (
     <main className="relative min-h-screen">
-      <HeroBanner movie={featuredMovie} />
-      
-      <div className="relative z-10 -mt-40 space-y-8 pb-16">
-        <MovieRow title="Trending Now" movies={trendingMovies} />
-        <MovieRow title="Popular on Netflix" movies={popularMovies} />
-        <MovieRow title="Top Rated" movies={topRatedMovies} />
+      <Navbar />
+      <Swiper
+        modules={[Autoplay, EffectFade]}
+        autoplay={{ delay: 5000, disableOnInteraction: false }}
+        effect="fade"
+        loop
+        className="relative z-0"
+      >
+        {movies.map((movie) => (
+          <SwiperSlide key={movie.id}>
+            <HeroBanner movie={movie} />
+          </SwiperSlide>
+        ))}
+      </Swiper>
+
+      <div className="relative z-10 space-y-8 pb-16">
+        <MovieRow title="Em Destaque" movies={movies} />
+        <MovieRow title="Popular na Netflix" movies={movies} />
+        <MovieRow title="Top da semana" movies={movies} />
       </div>
     </main>
   );
