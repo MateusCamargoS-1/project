@@ -27,14 +27,14 @@ export function HomePage() {
 
   if (!movies.length) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full animate-spin" />
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <div className="w-12 h-12 border-4 border-netflix-red border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <main className="relative min-h-screen">
+    <main className="relative min-h-screen bg-black">
       <Navbar />
       <Swiper
         modules={[Autoplay, EffectFade]}
@@ -50,10 +50,8 @@ export function HomePage() {
         ))}
       </Swiper>
 
-      <div className="relative z-10 space-y-8 pb-16">
-        <MovieRow title="Em Destaque" movies={movies} />
-        <MovieRow title="Popular na Netflix" movies={movies} />
-        <MovieRow title="Top da semana" movies={movies} />
+      <div className="relative z-10 space-y-8 pb-16 overflow-x-hidden">
+        <MovieRow title="Assistam também" movies={movies} />
       </div>
     </main>
   );

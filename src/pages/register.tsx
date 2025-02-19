@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../store/auth';
 import  Button  from '../components/ui/button';
 
+import bgRegister from '../assets/register.jpg';
+
 export function RegisterPage() {
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -31,7 +33,7 @@ export function RegisterPage() {
   return (
     <div 
       className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1574267432553-4b4628081c31?q=80&w=2069&auto=format&fit=crop)' }}
+      style={{ backgroundImage: `url(${bgRegister})` }}
     >
       <div className="absolute inset-0 bg-black/60" />
       

@@ -10,6 +10,32 @@
     --netflix-red-hover: 357 92% 52%;
   }
 
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+  }
+
+  .netflix-gradient {
+    background: linear-gradient(
+      77deg,
+      rgba(0, 0, 0, 0.95) 0%,
+      rgba(0, 0, 0, 0.6) 50%,
+      rgba(0, 0, 0, 0.3) 100%
+    );
+  }
+
+  .text-netflix-red {
+    color: #e50914;
+  }
+
+  .border-netflix-red {
+    border-color: #e50914;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
   }
@@ -18,7 +44,6 @@
 ::-webkit-scrollbar {
   display: none;
 }
-
 
 @layer utilities {
   .netflix-gradient {

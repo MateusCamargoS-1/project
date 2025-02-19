@@ -2,9 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search as SearchIcon, X } from 'lucide-react';
-import { api } from '../lib/axios';
 import { MovieCard } from '../components/movie-card';
 import { Navbar } from '../components/navbar';
+import listMovies from '../services/listMovies.service';
 
 interface Movie {
   id: string;
@@ -21,6 +21,7 @@ export function SearchPage() {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const searchTimeout = useRef<number>();
+  const suggestionsRef = useRef<HTMLDivElement>(null); 
 
   useEffect(() => {
     if (query.length >= 2) {
@@ -29,15 +30,19 @@ export function SearchPage() {
       searchTimeout.current = window.setTimeout(async () => {
         setIsLoading(true);
         try {
-          const [searchResults, suggestionsResults] = await Promise.all([
-            api.get(`/movies/search?q=${query}`),
-            api.get(`/movies/suggestions?q=${query}`),
-          ]);
+          const movies = await listMovies();
+          const filteredResults = movies.filter((movie) =>
+            movie.title.toLowerCase().includes(query.toLowerCase())
+          );
 
-          setResults(searchResults.data);
-          setSuggestions(suggestionsResults.data);
+          setResults(filteredResults);
+
+          const suggestionsResults = movies
+            .map((movie) => movie.title)
+            .filter((title) => title.toLowerCase().includes(query.toLowerCase()));
+          setSuggestions(suggestionsResults);
         } catch (error) {
-          console.error('Pesquisa falhou:', error);
+          console.error('Erro ao buscar filmes:', error);
         } finally {
           setIsLoading(false);
         }
@@ -51,6 +56,20 @@ export function SearchPage() {
 
     return () => clearTimeout(searchTimeout.current);
   }, [query, navigate]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+        setSuggestions([]);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen pt-24 px-8">
@@ -79,6 +98,7 @@ export function SearchPage() {
           <AnimatePresence>
             {suggestions.length > 0 && query.length >= 2 && (
               <motion.div
+                ref={suggestionsRef}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
