@@ -79,7 +79,7 @@ export function LoginPage() {
           </Button>
 
           <p className="text-gray-400 text-center">
-            Novo na Netflix?{' '}
+            Novo na Maflix?{' '}
             <Link to="/register" className="text-white hover:underline">
               Criar agora
             </Link>
