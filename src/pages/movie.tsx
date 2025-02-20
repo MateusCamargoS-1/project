@@ -81,9 +81,11 @@ export function MoviePage() {
               </button>
             </div>
             <VideoPlayer
-              movieId={movie.id}
               streamUrl={`https://mflix.moleniuk.com/api/stream/${movie.id}`}
               coverImage={movie.backdropPath}
+              title={movie.title}
+              overview={movie.overview}
+              matchPercentage={movie.voteAverage}
             />
           </div>
         ) : (

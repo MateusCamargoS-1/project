@@ -1,235 +1,166 @@
 import React, { useEffect, useRef, useState } from "react";
-import videojs from "video.js";
-import "video.js/dist/video-js.css";
-import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Subtitles,
-  Fullscreen,
-} from "lucide-react";
+import { ThumbsUp, Plus, Check } from "lucide-react";
 
 interface VideoPlayerProps {
-  movieId: number;
   streamUrl: string;
   coverImage: string;
+  title: string;
+  matchPercentage: number;
+  overview: string;
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
-  movieId,
   streamUrl,
   coverImage,
+  title,
+  matchPercentage,
+  overview,
 }) => {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const playerRef = useRef<videojs.Player | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const [volume, setVolume] = useState(1);
-  const [muted, setMuted] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [audioTrack, setAudioTrack] = useState<string>("eng");
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showCoverImage, setShowCoverImage] = useState(true);
-  const [loading, setLoading] = useState(true);
+  const playerRef = useRef<HTMLVideoElement | null>(null);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isInList, setIsInList] = useState(false);
+  const progressSaveThrottleRef = useRef<NodeJS.Timeout>();
+
+  const saveVideoProgress = () => {
+    if (playerRef.current) {
+      if (progressSaveThrottleRef.current) {
+        clearTimeout(progressSaveThrottleRef.current);
+      }
+
+      progressSaveThrottleRef.current = setTimeout(() => {
+        const currentTime = playerRef.current?.currentTime || 0;
+        const duration = playerRef.current?.duration || 0;
+        
+        const progressData = {
+          currentTime,
+          duration,
+          timestamp: Date.now(),
+        };
+        
+        localStorage.setItem(
+          `videoProgress_${streamUrl}`,
+          JSON.stringify(progressData)
+        );
+      }, 1000);
+    }
+  };
+
+  const loadVideoProgress = () => {
+    try {
+      const savedProgressString = localStorage.getItem(`videoProgress_${streamUrl}`);
+      if (savedProgressString && playerRef.current) {
+        const savedProgress = JSON.parse(savedProgressString);
+        
+        const isProgressValid = Date.now() - savedProgress.timestamp < 7 * 24 * 60 * 60 * 1000;
+        
+        if (isProgressValid) {
+          const isNearEnd = savedProgress.duration - savedProgress.currentTime <= 30;
+          
+          if (isNearEnd) {
+            playerRef.current.currentTime = 0;
+          } else {
+            playerRef.current.currentTime = savedProgress.currentTime;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading video progress:', error);
+      localStorage.removeItem(`videoProgress_${streamUrl}`);
+    }
+  };
 
   useEffect(() => {
-    if (!videoRef.current) return;
-
-    if (playerRef.current) return;
-
-    const vjsPlayer = videojs(videoRef.current, {
-      controls: true,
-      autoplay: false,
-      fluid: true,
-      sources: [
-        {
-          src: streamUrl,
-          type: "application/x-mpegURL",
-        },
-      ],
-    });
-
-    vjsPlayer.on("canplay", () => {
-      setLoading(false);
-    });
-
-    vjsPlayer.on("loadedmetadata", () => {
-      const savedProgress = localStorage.getItem(`movie-${movieId}-progress`);
-      if (savedProgress) {
-        vjsPlayer.currentTime(parseFloat(savedProgress));
-      }
-    });
-
-    playerRef.current = vjsPlayer;
+    const videoElement = playerRef.current;
+    if (videoElement) {
+      const handleMetadata = () => {
+        loadVideoProgress();
+        videoElement.removeEventListener('loadedmetadata', handleMetadata);
+      };
+      videoElement.addEventListener('loadedmetadata', handleMetadata);
+    }
 
     return () => {
-      if (playerRef.current) {
-        playerRef.current.dispose();
-        playerRef.current = null;
+      if (progressSaveThrottleRef.current) {
+        clearTimeout(progressSaveThrottleRef.current);
       }
     };
-  }, [streamUrl, movieId]);
+  }, [streamUrl]);
 
   useEffect(() => {
-    const player = playerRef.current;
-    if (!player) return;
+    const videoElement = playerRef.current;
 
-    const onTimeUpdate = () => {
-      const currentTime = player.currentTime();
-      setProgress(currentTime);
-      localStorage.setItem(`movie-${movieId}-progress`, currentTime.toString());
-    };
+    if (videoElement) {
+      videoElement.addEventListener("timeupdate", saveVideoProgress);
+      
+      const handleBeforeUnload = () => {
+        if (progressSaveThrottleRef.current) {
+          clearTimeout(progressSaveThrottleRef.current);
+        }
+        saveVideoProgress();
+      };
+      
+      window.addEventListener('beforeunload', handleBeforeUnload);
 
-    player.on("timeupdate", onTimeUpdate);
-
-    return () => {
-      player.off("timeupdate", onTimeUpdate);
-    };
-  }, [movieId]);
-
-  const togglePlay = () => {
-    const player = playerRef.current;
-    if (!player) return;
-    if (player.paused()) {
-      player.play();
-      setPlaying(true);
-      setShowCoverImage(false);
-      setLoading(false);
-    } else {
-      player.pause();
-      setPlaying(false);
+      return () => {
+        videoElement.removeEventListener("timeupdate", saveVideoProgress);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      };
     }
-  };
-
-  const toggleMute = () => {
-    const player = playerRef.current;
-    if (!player) return;
-    player.muted(!muted);
-    setMuted(!muted);
-  };
-
-  const toggleFullscreen = () => {
-    const player = playerRef.current;
-    if (!player) return;
-    if (!isFullscreen) {
-      player.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      player.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  };
-
-  const handleAudioTrackChange = (trackId: string) => {
-    const player = playerRef.current;
-    if (!player) return;
-    const audioTracks = player.audioTracks();
-
-    for (let i = 0; i < audioTracks.length; i++) {
-      const track = audioTracks[i];
-      track.enabled = track.id === trackId;
-    }
-
-    setAudioTrack(trackId);
-  };
-
-  const player = playerRef.current;
+  }, [streamUrl]);
 
   return (
-    <div className="relative w-full max-w-full bg-black">
-      {showCoverImage && (
-        <div className="absolute inset-0 flex justify-center items-center z-10">
-          <img
-            src={coverImage}
-            alt="Movie Cover"
-            className="absolute top-0 left-0 right-0 w-full h-full object-cover opacity-80"
-          />
-        </div>
-      )}
-
-      <video
-        ref={videoRef}
-        className="video-js vjs-big-play-centered w-full h-auto"
-      ></video>
-
-      {loading && (
-        <div className="absolute inset-0 flex justify-center items-center z-30 bg-black/50">
-          <div className="animate-spin border-t-4 border-b-4 border-white border-solid rounded-full w-16 h-16"></div>
-        </div>
-      )}
-
-      <div className="absolute inset-0 flex justify-center items-center p-4 z-20">
-        <div className="absolute flex items-center justify-center gap-6 bg-black/60 p-4 rounded-full w-4/5">
-          <button
-            onClick={togglePlay}
-            className="text-white hover:text-gray-300 transition"
-          >
-            {playing ? <Pause size={36} /> : <Play size={36} />}
-          </button>
-
-          <button
-            onClick={toggleMute}
-            className="text-white hover:text-gray-300 transition"
-          >
-            {muted ? <VolumeX size={36} /> : <Volume2 size={36} />}
-          </button>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.1}
-              value={volume}
-              onChange={(e) => {
-                const newVolume = parseFloat(e.target.value);
-                setVolume(newVolume);
-                player?.volume(newVolume);
-              }}
-              className="w-32"
-            />
-          </div>
-
-          <div className="relative group">
-            <button className="text-white hover:text-gray-300 transition">
-              <Subtitles size={36} />
-            </button>
-            <div className="absolute bottom-full left-0 hidden group-hover:block bg-black/90 p-2 rounded">
-              <select
-                value={audioTrack}
-                onChange={(e) => handleAudioTrackChange(e.target.value)}
-                className="bg-transparent text-white border border-white/20 rounded px-2 py-1"
-              >
-                <option value="eng">English</option>
-                <option value="por">Portuguese</option>
-              </select>
-            </div>
-          </div>
-
-          <button
-            onClick={toggleFullscreen}
-            className="text-white hover:text-gray-300 transition"
-          >
-            <Fullscreen size={36} />
-          </button>
-        </div>
+    <div className="w-full max-w-4xl mx-auto">
+      <div className="relative w-full bg-black rounded-lg shadow-lg overflow-hidden mb-6">
+        <video
+          ref={playerRef}
+          className="relative w-full aspect-video bg-black"
+          poster={coverImage}
+          controls
+          crossOrigin="anonymous"
+          src={streamUrl}
+          preload="metadata"
+          style={{
+            borderRadius: "8px",
+          }}
+        />
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 z-20">
-        <div className="relative w-full bg-gray-600 h-1 rounded-full cursor-pointer">
-          <div
-            className="bg-red-600 h-full rounded-full"
-            style={{ width: `${(progress / (player?.duration() || 1)) * 100}%` }}
-          />
-          <input
-            type="range"
-            min={0}
-            max={player?.duration() || 1}
-            step={0.1}
-            value={progress}
-            onChange={(e) => player?.currentTime(parseFloat(e.target.value))}
-            className="absolute top-0 w-full h-1 bg-transparent cursor-pointer"
-          />
+      <div className="px-4" style={{paddingBottom: "20px"}}>
+        <div className="flex items-center gap-4 mb-4">
+          <h1 className="text-3xl font-bold text-white">{title}</h1>
+          <span className="text-green-500 font-semibold">
+            {matchPercentage}% Match
+          </span>
+        </div>
+
+        <div className="flex gap-4 mb-6">
+          <button
+            onClick={() => setIsLiked(!isLiked)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+              isLiked
+                ? "bg-white text-black"
+                : "bg-gray-800 text-white hover:bg-gray-700"
+            }`}
+          >
+            <ThumbsUp size={20} />
+            {isLiked ? "Liked" : "Like"}
+          </button>
+          <button
+            onClick={() => setIsInList(!isInList)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+              isInList
+                ? "bg-white text-black"
+                : "bg-gray-800 text-white hover:bg-gray-700"
+            }`}
+          >
+            {isInList ? <Check size={20} /> : <Plus size={20} />}
+            {isInList ? "In My List" : "Add to My List"}
+          </button>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-white mb-2">Overview</h2>
+          <p className="text-gray-300 leading-relaxed">{overview}</p>
         </div>
       </div>
     </div>
