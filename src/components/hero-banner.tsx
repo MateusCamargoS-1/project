@@ -1,6 +1,7 @@
 import { Play, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import  Button  from './ui/button';
+import { useNavigate } from 'react-router-dom';
 
 // interface Movie {
 //   id: string;
@@ -14,6 +15,12 @@ import  Button  from './ui/button';
 // }
 
 export function HeroBanner({ movie }: any) {
+  const navigate = useNavigate();
+
+  const handlePlayClick = () => {
+    navigate(`/movie/${movie.id}`); 
+  };
+
   return (
     <div className="relative h-[85vh] w-full">
       <div className="absolute inset-0">
@@ -35,7 +42,7 @@ export function HeroBanner({ movie }: any) {
         <p className="text-lg mb-6">{movie.overview}</p>
         <div className="flex space-x-4">
           <Button size="lg" className="flex items-center space-x-2">
-            <Play className="w-5 h-5" />
+            <Play className="w-5 h-5" onClick={handlePlayClick}/>
             <span>Play</span>
           </Button>
           <Button variant="secondary" size="lg" className="flex items-center space-x-2">
