@@ -41,8 +41,8 @@ export function HeroBanner({ movie }: any) {
         <h1 className="text-5xl font-bold mb-4">{movie.title}</h1>
         <p className="text-lg mb-6">{movie.overview}</p>
         <div className="flex space-x-4">
-          <Button size="lg" className="flex items-center space-x-2">
-            <Play className="w-5 h-5" onClick={handlePlayClick}/>
+          <Button size="lg" className="flex items-center space-x-2" onClick={handlePlayClick}>
+            <Play className="w-5 h-5"/>
             <span>Play</span>
           </Button>
           <Button variant="secondary" size="lg" className="flex items-center space-x-2">

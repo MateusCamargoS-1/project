@@ -1,10 +1,9 @@
 import { create } from 'zustand';
-import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
+import { api } from '../lib/axios';
 
 interface User {
-  id: string;
-  name: string;
-  email: string;
+  nome: string;
   avatar?: string;
 }
 
@@ -17,7 +16,7 @@ interface AuthState {
 }
 
 export const useAuth = create<AuthState>((set) => {
-  const token = sessionStorage.getItem('netflix_token');
+  const token = sessionStorage.getItem('mflix_token');
   const isAuthenticated = !!token;
   const user = isAuthenticated ? null : null;
 
@@ -26,25 +25,33 @@ export const useAuth = create<AuthState>((set) => {
     isAuthenticated,
     login: async (login, password) => {
       try {
-        const response = await axios.post('https://mflix.moleniuk.com/api/auth/login', { login, password });
-        const { token, user } = response.data;
+        const response = await api.post('/auth/login', { login, password });
+        const user = response.data;
 
-        sessionStorage.setItem('netflix_token', token);
-        set({ user, isAuthenticated: true });
+        if(!user) {
+          throw new Error('Token not received');
+        }
+
+        const decodedUser: any = jwtDecode(user);
+
+        sessionStorage.setItem('mflix_token', user);
+        sessionStorage.setItem('mflix_user', JSON.stringify(decodedUser));
+
+        set({ user: decodedUser, isAuthenticated: true });
       } catch (error) {
         throw new Error('Invalid credentials');
       }
     },
     logout: () => {
-      sessionStorage.removeItem('netflix_token');
+      sessionStorage.removeItem('mflix_token');
       set({ user: null, isAuthenticated: false });
     },
     register: async (name, email, password) => {
       try {
-        const response = await axios.post('/auth/register', { name, email, password });
+        const response = await api.post('/auth/register', { name, email, password });
         const { token, user } = response.data;
 
-        sessionStorage.setItem('netflix_token', token);
+        sessionStorage.setItem('mflix_token', token);
         set({ user, isAuthenticated: true });
       } catch (error) {
         throw new Error('Registration failed');
