@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
+import ReactPlayer from "react-player";
 import { ThumbsUp, Plus, Check } from "lucide-react";
 
 interface VideoPlayerProps {
@@ -7,6 +8,7 @@ interface VideoPlayerProps {
   title: string;
   matchPercentage: number;
   overview: string;
+  subtitles?: string;
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -15,117 +17,53 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   title,
   matchPercentage,
   overview,
+  subtitles,
 }) => {
-  const playerRef = useRef<HTMLVideoElement | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [isInList, setIsInList] = useState(false);
-  const progressSaveThrottleRef = useRef<NodeJS.Timeout>();
+  const [language, setLanguage] = useState<string>("en");
+  const [videoUrl, setVideoUrl] = useState<string>(streamUrl);
 
-  const saveVideoProgress = () => {
-    if (playerRef.current) {
-      if (progressSaveThrottleRef.current) {
-        clearTimeout(progressSaveThrottleRef.current);
-      }
-
-      progressSaveThrottleRef.current = setTimeout(() => {
-        const currentTime = playerRef.current?.currentTime || 0;
-        const duration = playerRef.current?.duration || 0;
-        
-        const progressData = {
-          currentTime,
-          duration,
-          timestamp: Date.now(),
-        };
-        
-        localStorage.setItem(
-          `videoProgress_${streamUrl}`,
-          JSON.stringify(progressData)
-        );
-      }, 1000);
-    }
+  const changeAudioLanguage = (lang: string) => {
+    setLanguage(lang);
+    setVideoUrl(`${streamUrl}?lang=${lang}`);
   };
-
-  const loadVideoProgress = () => {
-    try {
-      const savedProgressString = localStorage.getItem(`videoProgress_${streamUrl}`);
-      if (savedProgressString && playerRef.current) {
-        const savedProgress = JSON.parse(savedProgressString);
-        
-        const isProgressValid = Date.now() - savedProgress.timestamp < 7 * 24 * 60 * 60 * 1000;
-        
-        if (isProgressValid) {
-          const isNearEnd = savedProgress.duration - savedProgress.currentTime <= 30;
-          
-          if (isNearEnd) {
-            playerRef.current.currentTime = 0;
-          } else {
-            playerRef.current.currentTime = savedProgress.currentTime;
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error loading video progress:', error);
-      localStorage.removeItem(`videoProgress_${streamUrl}`);
-    }
-  };
-
-  useEffect(() => {
-    const videoElement = playerRef.current;
-    if (videoElement) {
-      const handleMetadata = () => {
-        loadVideoProgress();
-        videoElement.removeEventListener('loadedmetadata', handleMetadata);
-      };
-      videoElement.addEventListener('loadedmetadata', handleMetadata);
-    }
-
-    return () => {
-      if (progressSaveThrottleRef.current) {
-        clearTimeout(progressSaveThrottleRef.current);
-      }
-    };
-  }, [streamUrl]);
-
-  useEffect(() => {
-    const videoElement = playerRef.current;
-
-    if (videoElement) {
-      videoElement.addEventListener("timeupdate", saveVideoProgress);
-      
-      const handleBeforeUnload = () => {
-        if (progressSaveThrottleRef.current) {
-          clearTimeout(progressSaveThrottleRef.current);
-        }
-        saveVideoProgress();
-      };
-      
-      window.addEventListener('beforeunload', handleBeforeUnload);
-
-      return () => {
-        videoElement.removeEventListener("timeupdate", saveVideoProgress);
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-      };
-    }
-  }, [streamUrl]);
 
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="relative w-full bg-black rounded-lg shadow-lg overflow-hidden mb-6">
-        <video
-          ref={playerRef}
-          className="relative w-full aspect-video bg-black"
-          poster={coverImage}
+        <ReactPlayer
+          url={videoUrl}
+          playing
           controls
-          crossOrigin="anonymous"
-          src={streamUrl}
-          preload="metadata"
+          width="100%"
+          height="100%"
+          light={ < img  src = {coverImage} /> }
           style={{
             borderRadius: "8px",
+            objectFit: "cover",
+          }}
+          config={{
+            file: {
+              attributes: {
+                crossOrigin: "anonymous",
+              },
+              tracks: subtitles
+                ? [
+                    {
+                      kind: "subtitles",
+                      label: language === "pt" ? "Português" : "English",
+                      srcLang: language,
+                      src: subtitles,
+                    },
+                  ]
+                : [],
+            },
           }}
         />
       </div>
 
-      <div className="px-4" style={{paddingBottom: "20px"}}>
+      <div className="px-4" style={{ paddingBottom: "20px" }}>
         <div className="flex items-center gap-4 mb-4">
           <h1 className="text-3xl font-bold text-white">{title}</h1>
           <span className="text-green-500 font-semibold">
@@ -137,9 +75,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           <button
             onClick={() => setIsLiked(!isLiked)}
             className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
-              isLiked
-                ? "bg-white text-black"
-                : "bg-gray-800 text-white hover:bg-gray-700"
+              isLiked ? "bg-white text-black" : "bg-gray-800 text-white hover:bg-gray-700"
             }`}
           >
             <ThumbsUp size={20} />
@@ -148,9 +84,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           <button
             onClick={() => setIsInList(!isInList)}
             className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
-              isInList
-                ? "bg-white text-black"
-                : "bg-gray-800 text-white hover:bg-gray-700"
+              isInList ? "bg-white text-black" : "bg-gray-800 text-white hover:bg-gray-700"
             }`}
           >
             {isInList ? <Check size={20} /> : <Plus size={20} />}
@@ -161,6 +95,18 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-white mb-2">Overview</h2>
           <p className="text-gray-300 leading-relaxed">{overview}</p>
+        </div>
+
+        <div className="mt-4">
+          <label className="text-white mr-4">Select Language:</label>
+          <select
+            value={language}
+            onChange={(e) => changeAudioLanguage(e.target.value)}
+            className="bg-gray-700 text-white px-4 py-2 rounded-md"
+          >
+            <option value="en">English</option>
+            <option value="pt">Português</option>
+          </select>
         </div>
       </div>
     </div>
